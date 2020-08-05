@@ -11,26 +11,78 @@ const write = require(`${__dirname}/write.js`);
 //   // });
 // });
 
-// zlib.gzip(write({
-//   "compound thingy": {
-//     "list byte thingy": [0, 1, 2, 3, 4, 5, 6, 7],
-//     "string name": "ɮendergo",
-//     "list compound": [{
-//       "byte x": 1,
-//       "byte y": 2,
-//       "byte z": 3
-//     }, {
-//       "float π": 3.14,
-//       "double e": 2.718,
-//       "intArray fibonacci": [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
-//     }]
-//   }
-// }), (err, data) => {
-//   fs.writeFileSync("test.nbt", data);
-// })
+let n = 128;
 
-// console.log(read(write({
-//   "compound thingy": {
-//     "longArray twpsyn": [1000n, 2000n, 3000n, 4000n]
-//   }
-// }))[0]);
+let volume = 0;
+let blockStates = "";
+for (let i = 0; i < n ** 2; i++) {
+  if (Math.random() > 0.5) {
+    blockStates += "00";
+  } else {
+    blockStates += "01";
+    volume++;
+  }
+}
+
+blockStates = blockStates.match(/.{1,64}/g);
+
+let blockStatesArray = [];
+for (let i = 0; i < blockStates.length; i++) {
+  blockStatesArray.push(BigInt("0b" + blockStates[i]) - 9223372036854775808n);
+}
+
+console.log(blockStatesArray);
+
+const litematic = {
+  "compound ": {
+    "compound Metadata": {
+      "compound EnclosingSize": {
+        "int x": n,
+        "int y": 1,
+        "int z": n
+      },
+      "string Author": "F4Tornado",
+      "string Description": "A normal map",
+      "string Name": "Auto generated map",
+      "int RegionCount": 1,
+      "long TimeCreated": BigInt(Date.now()),
+      "long TimeModified": BigInt(Date.now()),
+      "int TotalBlocks": volume,
+      "int TotalVolume": n ** 2
+    },
+    "compound Regions": {
+      "compound Map": {
+        "compound Position": {
+          "int x": 0,
+          "int y": 0,
+          "int z": 0
+        },
+        "compound Size": {
+          "int x": n,
+          "int y": 1,
+          "int z": n
+        },
+        "list compound BlockStatePalette": [{
+          "string Name": "minecraft:air"
+        }, {
+          "string Name": "minecraft:red_concrete"
+        }],
+        "list compound Entities": [],
+        "list compound PendingBlockTicks": [],
+        "list compound PendingFluidTicks": [],
+        "list compound TileEntities": [],
+        "longArray BlockStates": blockStatesArray
+      }
+    },
+    "int MinecraftDataVersion": 2230,
+    "int Version": 5
+  }
+}
+
+// fs.writeFileSync("D:/all items/games/.minecraft/schematics/test.litematic", write(litematic));
+// console.log(read(write(litematic))[0])
+
+// zlib.gzip(write(litematic), (err, data) => {
+//   if (err) throw err;
+//   fs.writeFileSync("D:/all items/games/.minecraft/schematics/test.litematic", data);
+// })

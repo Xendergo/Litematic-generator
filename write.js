@@ -168,7 +168,7 @@ function encode(data, named = true, defaultType = -1, defaultName) {
 
       if (typeof dat === "object") {
         if (named) {
-          ret = ret.concat([10]).concat(stringToBuffer(name.split(" ")[1]));
+          ret = ret.concat([10]).concat(stringToBuffer(name));
         }
         ret = ret.concat(Array.from(encode(dat))).concat([0]);
       } else {
@@ -207,10 +207,10 @@ function encode(data, named = true, defaultType = -1, defaultName) {
 
         let array = [];
         for (let i = 0; i < dat.length; i++) {
-          if (typeof dat[i] === "bigint" && dat[i] < 8791026472627208192n && dat[i] > -9223372036854775809n) {
+          if (typeof dat[i] === "bigint" && dat[i] < 9223372036854775808n && dat[i] > -9223372036854775809n) {
             array = array.concat(longToBuffer(dat[i]));
           } else {
-            throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints`;
+            throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints. The value is ${dat[i]} ${dat[i] < 9223372036854775808n}`;
           }
         }
 
