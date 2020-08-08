@@ -2,7 +2,7 @@
   "grass_block": [127, 178, 65],
   "sand": [247, 233, 163],
   "mushroom_stem": [199, 199, 199],
-  "lava": [255, 0, 0],
+  "redstone_block": [255, 0, 0],
   "packed_ice": [160, 160, 255],
   "iron_block": [167, 167, 167],
   "oak_leaves": [0, 124, 0],

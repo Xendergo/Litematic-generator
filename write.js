@@ -204,21 +204,16 @@ function encode(data, named = true, defaultType = -1, defaultName) {
           ret = ret.concat([12]).concat(stringToBuffer(name));
         }
 
-        if (Array.isArray(dat)) {
-          ret = ret.concat(intToBuffer(dat.length));
-          let array = [];
-          for (let i = 0; i < dat.length; i++) {
-            if (typeof dat[i] === "bigint" && dat[i] < 9223372036854775808n && dat[i] > -9223372036854775809n) {
-              array = array.concat(longToBuffer(dat[i]));
-            } else {
-              throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints. The value is ${dat[i]} ${dat[i] < 9223372036854775808n}`;
-            }
-
-            ret = ret.concat(array);
+        ret = ret.concat(intToBuffer(dat.length));
+        let array = [];
+        for (let i = 0; i < dat.length; i++) {
+          if (typeof dat[i] === "bigint" && dat[i] < 9223372036854775808n && dat[i] > -9223372036854775809n) {
+            array = array.concat(longToBuffer(dat[i]));
+          } else {
+            throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints. The value is ${dat[i]} ${dat[i] < 9223372036854775808n}`;
           }
-        } else {
-          ret = ret.concat(Array.from(dat));
         }
+        ret = ret.concat(array);
       } else {
         throw `The byte array "${name}" is too long`;
       }

@@ -12,8 +12,8 @@ const write = require(`${__dirname}/write.js`);
 //   // });
 // });
 
-let w = 8;
-let h = 8;
+let w = 5;
+let h = 5;
 // let imgw = 1030;
 // let imgh = 360;
 let imgw = 984;
@@ -22,19 +22,21 @@ let imgh = 984;
 let colors = JSON.parse(fs.readFileSync("colors.json"));
 let keys = Object.keys(colors);
 
-let blockPalette = ["minecraft:air"];
+let blockPalette = ["minecraft:air", "minecraft:emerald_block", "minecraft:redstone_block", "minecraft:black_terracotta", "minecraft:gold_block"];
 let blocks = [];
 
 png.decode("xendergo logo.png", (pixels) => {
   let imageColors = [];
   for (let i = 0; i < w * h; i++) {
-    // let pixel = (Math.floor(i * (imgh / h)) + Math.floor(i * (imgw / w))) * 4;
-    // let a = pixels[pixel + 3];
+    // let x = (i % w) * (imgw / w);
+    // let y = Math.floor(i / h) * (imgh / h);
+    // pixel = (Math.round(y) * imgw + Math.round(x)) * 4;
+    // let a = pixels[pixel + 3] / 255;
     // let r = pixels[pixel] * a;
     // let g = pixels[pixel + 1] * a;
     // let b = pixels[pixel + 2] * a;
     // imageColors.push([r, g, b]);
-    imageColors.push([i % 3 === 0 ? 255 : 0, 255, 255])
+    imageColors.push([i % 3 === 0 ? 255 : 0, i % 2 === 0 ? 255 : 0, 0]);
   }
 
   for (let i = 0; i < imageColors.length; i++) {
@@ -74,45 +76,52 @@ png.decode("xendergo logo.png", (pixels) => {
   }
 
   let bits = 2;
-  while (2 ** bits < blockPalette.length) {
+  while (2 ** bits - 1 < blockPalette.length) {
     bits++;
   }
+  console.log(bits, "bits");
 
-  let blockStatesBits = [];
-  for (let i = 0; i < blocks.length; i++) {
-    blockStatesBits.push(blocks[i].toString(2).padStart(bits, "0"));
+  let bitBlocks = [];
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    bitBlocks.unshift(blocks[i].toString(2).padStart(bits, "0"));
   }
 
-  // blockStatesBits = blockStatesBits.reverse().join("");
+  let blockStates = [];
+  while (bitBlocks.length !== 0) {
+    let long = [];
+    let longLength = 0;
+    while (longLength < 64 && bitBlocks.length !== 0) {
+      let toPush = bitBlocks.shift();
+      long.unshift(toPush);
+      longLength += toPush.length;
+    }
 
-  if (parseInt(blockStatesBits.slice(0, bits)) === 0) {
-    blockStatesBits = blockStatesBits.slice(bits);
+    console.log(long);
+    long = long.join("");
+    console.log(long)
+
+    if (long.length > 64) {
+      bitBlocks.unshift(long.substr(0, longLength - 64));
+      long = long.substr(longLength - 64);
+    }
+
+    blockStates.push(long);
   }
 
-  let blockStatesSplit = blockStatesBits.join("").match(/.{1,8}/g);
+  console.log(blockStates);
 
-  for (let i = 0; i < w * h; i += w) {
-    let table = [];
-    table.push(blockStatesSplit);
-    console.log(table.join("\n"))
+
+  for (let i = blockStates.length - 1; i >= 0; i--) {
+    // console.log(blockStates[i], blockStates[i].length);
+    let split = blockStates[i].match(/.{1,8}/g);
+    let buffer = [];
+    for (let j = split.length - 1; j >= 0; j--) {
+      buffer.unshift(Number("0b" + split[j]));
+    }
+    // console.log(split);
+    blockStates[i] = toBigInt(buffer);
   }
 
-  let buffer = [];
-  for (let i = blockStatesSplit.length - 1; i >= 0; i--) {
-    buffer.unshift(Number("0b" + blockStatesSplit[i]))
-  }
-
-  buffer = buffer.reverse();
-
-  while (buffer.length % 8 !== 0) {
-    buffer.push(0);
-  }
-
-  buffer = intToBuffer(Math.ceil(buffer.length / 8)).concat(buffer);
-
-  console.log(buffer);
-
-  buffer = Buffer.from(buffer)
 
   const litematic = {
     "compound ": {
@@ -148,7 +157,7 @@ png.decode("xendergo logo.png", (pixels) => {
           "list compound PendingBlockTicks": [],
           "list compound PendingFluidTicks": [],
           "list compound TileEntities": [],
-          "longArray BlockStates": buffer
+          "longArray BlockStates": blockStates
         }
       },
       "int MinecraftDataVersion": 2567,
@@ -179,15 +188,4 @@ function toBigInt(buffer) {
   return sum;
 }
 
-function intToBuffer(int) {
-  let a = Math.floor(int / (256 ** 3)) + (int < 0 ? 256 : 0);
-  int -= (a - (int < 0 ? 256 : 0)) * (256 ** 3);
-  let b = Math.floor(int / (256 ** 2));
-  int -= b * (256 ** 2);
-  let c = Math.floor(int / (256));
-  int -= c * (256);
-  let d = int;
-  return [a, b, c, d];
-}
-
-console.log(Array.isArray(Buffer.from([0, 0])));
+// console.log((3770512433891064017n).toString(2), (5374165438798n).toString(2));
