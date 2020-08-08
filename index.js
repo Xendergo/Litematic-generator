@@ -12,8 +12,8 @@ const write = require(`${__dirname}/write.js`);
 //   // });
 // });
 
-let w = 5;
-let h = 5;
+let w = 128;
+let h = 128;
 // let imgw = 1030;
 // let imgh = 360;
 let imgw = 984;
@@ -28,15 +28,15 @@ let blocks = [];
 png.decode("xendergo logo.png", (pixels) => {
   let imageColors = [];
   for (let i = 0; i < w * h; i++) {
-    // let x = (i % w) * (imgw / w);
-    // let y = Math.floor(i / h) * (imgh / h);
-    // pixel = (Math.round(y) * imgw + Math.round(x)) * 4;
-    // let a = pixels[pixel + 3] / 255;
-    // let r = pixels[pixel] * a;
-    // let g = pixels[pixel + 1] * a;
-    // let b = pixels[pixel + 2] * a;
-    // imageColors.push([r, g, b]);
-    imageColors.push([i % 3 === 0 ? 255 : 0, i % 2 === 0 ? 255 : 0, 0]);
+    let x = (i % w) * (imgw / w);
+    let y = Math.floor(i / h) * (imgh / h);
+    pixel = (Math.round(y) * imgw + Math.round(x)) * 4;
+    let a = pixels[pixel + 3] / 255;
+    let r = pixels[pixel] * a;
+    let g = pixels[pixel + 1] * a;
+    let b = pixels[pixel + 2] * a;
+    imageColors.push([r, g, b]);
+    // imageColors.push([i % 3 === 0 ? 255 : 0, i % 2 === 0 ? 255 : 0, 0]);
   }
 
   for (let i = 0; i < imageColors.length; i++) {
@@ -62,12 +62,6 @@ png.decode("xendergo logo.png", (pixels) => {
     blocks.push(paletteIndex);
   }
 
-  for (let i = 0; i < w * h; i += w) {
-    let table = [];
-    table.push(blocks.slice(i, i + w));
-    console.log(table.join("\n"))
-  }
-
   let BlockStatePalette = [];
   for (let i = 0; i < blockPalette.length; i++) {
     BlockStatePalette.push({
@@ -79,46 +73,25 @@ png.decode("xendergo logo.png", (pixels) => {
   while (2 ** bits - 1 < blockPalette.length) {
     bits++;
   }
-  console.log(bits, "bits");
 
   let bitBlocks = [];
   for (let i = blocks.length - 1; i >= 0; i--) {
     bitBlocks.unshift(blocks[i].toString(2).padStart(bits, "0"));
   }
 
-  let blockStates = [];
-  while (bitBlocks.length !== 0) {
-    let long = [];
-    let longLength = 0;
-    while (longLength < 64 && bitBlocks.length !== 0) {
-      let toPush = bitBlocks.shift();
-      long.unshift(toPush);
-      longLength += toPush.length;
-    }
-
-    console.log(long);
-    long = long.join("");
-    console.log(long)
-
-    if (long.length > 64) {
-      bitBlocks.unshift(long.substr(0, longLength - 64));
-      long = long.substr(longLength - 64);
-    }
-
-    blockStates.push(long);
+  bitBlocks = bitBlocks.reverse().join("");
+  let blockStates = bitBlocks.split("").reverse().join("").match(/.{1,64}/g);
+  for (let i = blockStates.length - 1; i >= 0; i--) {
+    blockStates[i] = blockStates[i].split("").reverse().join("").padStart(64, "0");
   }
 
-  console.log(blockStates);
-
-
   for (let i = blockStates.length - 1; i >= 0; i--) {
-    // console.log(blockStates[i], blockStates[i].length);
     let split = blockStates[i].match(/.{1,8}/g);
     let buffer = [];
     for (let j = split.length - 1; j >= 0; j--) {
       buffer.unshift(Number("0b" + split[j]));
     }
-    // console.log(split);
+
     blockStates[i] = toBigInt(buffer);
   }
 
