@@ -199,21 +199,23 @@ function encode(data, named = true, defaultType = -1, defaultName) {
         }
       }
     } else if (type === 12) {
-      if (dat.length < 2147483648) {
+      if (dat.length / 8 < 2147483648) {
         if (named) {
           ret = ret.concat([12]).concat(stringToBuffer(name));
         }
 
-        ret = ret.concat(intToBuffer(dat.length));
-        let array = [];
-        for (let i = 0; i < dat.length; i++) {
-          if (typeof dat[i] === "bigint" && dat[i] < 9223372036854775808n && dat[i] > -9223372036854775809n) {
-            array = array.concat(longToBuffer(dat[i]));
-          } else {
-            throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints. The value is ${dat[i]} ${dat[i] < 9223372036854775808n}`;
-          }
-        }
-        ret = ret.concat(array);
+        ret = ret.concat(intToBuffer(dat.length / 8));
+        // let array = [];
+        // for (let i = dat.length - 1; i >= 0; i--) {
+        //   let num = dat[i];
+        //   // if (typeof num === "bigint" && num < 9223372036854775808n && num > -9223372036854775809n) {
+        //   array = longToBuffer(num).concat(array);
+        //   // } else {
+        //   //   throw `The long array "${name}" has elements that aren't longs. Longs must be passed as bigints. The value is ${num} ${num < 9223372036854775808n}`;
+        //   // }
+        //   console.log(i);
+        // }
+        ret = ret.concat(dat);
       } else {
         throw `The byte array "${name}" is too long`;
       }
